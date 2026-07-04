@@ -1,0 +1,6 @@
+{
+  "name": "StudentOS AI",
+  "description": "All-in-one student workspace featuring Attendance tracking, Smart Note library with AI actions, CGPA calculator, dynamic flashcards, and an AI Study Assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
