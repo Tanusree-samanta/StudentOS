@@ -8,7 +8,7 @@ StudentOS AI is a highly-polished, all-in-one student workspace featuring attend
 
 Follow these simple steps to set up and run StudentOS AI on your local machine using Visual Studio Code.
 
-### 📋 Prerequisites
+### 📋 Prerequisites 
 
 Ensure you have the following installed on your system:
 - **Node.js**: Version `18.x` or higher (Recommended: LTS version)
