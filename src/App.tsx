@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Cloud, CloudLightning, RefreshCw, CheckCircle2, Database, Copy, Check, ExternalLink, AlertTriangle, X } from "lucide-react";
-import { supabase, onAuthStateChanged, syncGoogleUserProfile } from "./lib/supabaseService";
+import { supabase, onAuthStateChanged } from "./lib/supabaseService";
 import { pullFirestoreToLocalState, pushLocalStateToFirestore, getLocalStorageSnapshotHash, initializeEmptyWorkspace } from "./lib/syncEngine";
 import {
   ScreenID,
