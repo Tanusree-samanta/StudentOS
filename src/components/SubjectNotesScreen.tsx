@@ -320,11 +320,13 @@ export default function SubjectNotesScreen({ onNavigate }: SubjectNotesScreenPro
     document.body.removeChild(link);
   };
 
-  const handleOpenFileInNewTab = async (file: SubjectFile) => {
+const handleOpenFileInNewTab = async (file: SubjectFile) => {
     setOpeningFileId(file.id);
+
     try {
-      const path = file.storagePath || file.id;
-      const fileUrl = await getNoteFileUrl(path);
+      const fileUrl = file.storagePath
+        ? await getNoteFileUrl(file.storagePath)
+        : (file.contentUrl || "");
 
       if (!fileUrl) {
         console.error("File URL missing");
@@ -333,42 +335,36 @@ export default function SubjectNotesScreen({ onNavigate }: SubjectNotesScreenPro
         return;
       }
 
-      // Guard: reject anything that isn't a real absolute URL or data URI.
-      // A bare storagePath (e.g. "local_ae7n8b") slipping through here would
-      // otherwise be treated as a relative link and just reload this app.
-      const isValidUrl = fileUrl.startsWith("http://") || fileUrl.startsWith("https://") || fileUrl.startsWith("data:");
-      if (!isValidUrl) {
-        console.error("Invalid file URL (not absolute):", fileUrl);
-        setErrorToast("This file isn't stored in the cloud yet, so it can't be opened. Try re-uploading it while signed in with cloud sync enabled.");
-        setOpeningFileId(null);
-        return;
-      }
-
       let finalUrl = fileUrl;
+
+      // Only convert data: URLs to blobs (needed for correct MIME rendering).
+      // Real Supabase URLs are opened directly — no extra fetch, no CORS risk.
       if (fileUrl.startsWith("data:")) {
+        const mimeMap: Record<string, string> = {
+          pdf: "application/pdf",
+          png: "image/png",
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          gif: "image/gif",
+          svg: "image/svg+xml",
+          txt: "text/plain",
+        };
+        const correctMime = mimeMap[file.fileType.toLowerCase()] || "application/octet-stream";
         const parts = fileUrl.split(",");
-        const mime = parts[0].match(/:(.*?);/)?.[1] || "text/plain";
         const bstr = atob(parts[1]);
         let n = bstr.length;
         const u8arr = new Uint8Array(n);
         while (n--) {
           u8arr[n] = bstr.charCodeAt(n);
         }
-        const blob = new Blob([u8arr], { type: mime });
+        const blob = new Blob([u8arr], { type: correctMime });
         finalUrl = URL.createObjectURL(blob);
       }
 
-      // 3. ONLY open tab after URL is ready
-      const newTab = window.open(finalUrl, "_blank", "noopener,noreferrer");
-      
-      // 4. Fallback if the tab is blocked by popup blockers
+      const newTab = window.open(finalUrl, "_blank");
+
       if (!newTab) {
-        const fallbackTab = window.open("about:blank", "_blank");
-        if (fallbackTab) {
-          fallbackTab.location.href = finalUrl;
-        } else {
-          setErrorToast("Popup blocked! Please allow popups to view this file.");
-        }
+        setErrorToast("Popup blocked! Please allow popups to view this file.");
       }
     } catch (err) {
       console.error("Error opening file in new tab:", err);
