@@ -323,10 +323,9 @@ export default function SubjectNotesScreen({ onNavigate }: SubjectNotesScreenPro
 const handleOpenFileInNewTab = async (file: SubjectFile) => {
     setOpeningFileId(file.id);
 
-    try {
-      const fileUrl = file.storagePath
-        ? await getNoteFileUrl(file.storagePath)
-        : (file.contentUrl || "");
+   const fileUrl = (file.storagePath && !file.storagePath.startsWith("local_"))
+  ? await getNoteFileUrl(file.storagePath)
+  : (file.contentUrl || "");
 
       if (!fileUrl) {
         console.error("File URL missing");
