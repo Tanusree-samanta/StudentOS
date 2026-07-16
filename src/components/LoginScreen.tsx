@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { ScreenID } from "../types";
 import { loginUser } from "../lib/supabaseService";
+import bgImage from '../assets/images/studentos_login_bg_1783007834381.jpg';
 
 
 interface LoginScreenProps {
@@ -220,7 +221,7 @@ export default function LoginScreen({ onNavigate, setUserName }: LoginScreenProp
       {/* Background Photo */}
       <div className="absolute inset-0 z-0">
         <img
-          src="/src/assets/images/studentos_login_bg_1783007834381.jpg"
+          src={bgImage}
           alt="StudentOS Background"
           className="w-full h-full object-cover select-none pointer-events-none"
           referrerPolicy="no-referrer"
