@@ -320,86 +320,59 @@ export default function SubjectNotesScreen({ onNavigate }: SubjectNotesScreenPro
     document.body.removeChild(link);
   };
 
-const handleOpenFileInNewTab = async (file: SubjectFile) => {
+  const handleOpenFileInNewTab = async (file: SubjectFile) => {
     setOpeningFileId(file.id);
-
-    // No "noopener" here — we need a working reference to redirect this
-    // tab once the real URL is ready.
-    const newTab = window.open("", "_blank");
-    if (newTab) {
-      newTab.document.write(
-        "<title>Loading file…</title><body style='background:#0f172a;color:#94a3b8;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;'>Loading file…</body>"
-      );
-    }
-
     try {
-      const fileUrl = file.storagePath
-        ? await getNoteFileUrl(file.storagePath)
-        : (file.contentUrl || "");
+      const path = file.storagePath || file.id;
+      const fileUrl = await getNoteFileUrl(path);
 
       if (!fileUrl) {
         console.error("File URL missing");
         setErrorToast("Unable to retrieve file URL.");
-        if (newTab) newTab.close();
         setOpeningFileId(null);
         return;
       }
 
-      // Map fileType to the correct MIME type so browsers render PDFs
-      // in their native viewer instead of downloading or misinterpreting them.
-      const mimeMap: Record<string, string> = {
-        pdf: "application/pdf",
-        png: "image/png",
-        jpg: "image/jpeg",
-        jpeg: "image/jpeg",
-        gif: "image/gif",
-        svg: "image/svg+xml",
-        txt: "text/plain",
-        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        doc: "application/msword",
-        pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        ppt: "application/vnd.ms-powerpoint"
-      };
-      const correctMime = mimeMap[file.fileType.toLowerCase()] || "application/octet-stream";
+      // Guard: reject anything that isn't a real absolute URL or data URI.
+      // A bare storagePath (e.g. "local_ae7n8b") slipping through here would
+      // otherwise be treated as a relative link and just reload this app.
+      const isValidUrl = fileUrl.startsWith("http://") || fileUrl.startsWith("https://") || fileUrl.startsWith("data:");
+      if (!isValidUrl) {
+        console.error("Invalid file URL (not absolute):", fileUrl);
+        setErrorToast("This file isn't stored in the cloud yet, so it can't be opened. Try re-uploading it while signed in with cloud sync enabled.");
+        setOpeningFileId(null);
+        return;
+      }
 
       let finalUrl = fileUrl;
-
       if (fileUrl.startsWith("data:")) {
         const parts = fileUrl.split(",");
+        const mime = parts[0].match(/:(.*?);/)?.[1] || "text/plain";
         const bstr = atob(parts[1]);
         let n = bstr.length;
         const u8arr = new Uint8Array(n);
         while (n--) {
           u8arr[n] = bstr.charCodeAt(n);
         }
-        // Force the correct MIME type here rather than trusting whatever
-        // was embedded in the original data URL header.
-        const blob = new Blob([u8arr], { type: correctMime });
+        const blob = new Blob([u8arr], { type: mime });
         finalUrl = URL.createObjectURL(blob);
-      } else if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
-        // Real Supabase Storage URL — fetch it and re-wrap as a Blob with
-        // the correct MIME type, so the browser's native PDF viewer opens
-        // instead of triggering a raw download.
-        try {
-          const resp = await fetch(fileUrl);
-          const arrayBuf = await resp.arrayBuffer();
-          const blob = new Blob([arrayBuf], { type: correctMime });
-          finalUrl = URL.createObjectURL(blob);
-        } catch (fetchErr) {
-          console.warn("Could not re-wrap remote file as typed Blob, using original URL:", fetchErr);
-          finalUrl = fileUrl;
-        }
       }
 
-      if (newTab && !newTab.closed) {
-        newTab.location.href = finalUrl;
-      } else {
-        setErrorToast("Popup blocked! Please allow popups to view this file.");
+      // 3. ONLY open tab after URL is ready
+      const newTab = window.open(finalUrl, "_blank", "noopener,noreferrer");
+      
+      // 4. Fallback if the tab is blocked by popup blockers
+      if (!newTab) {
+        const fallbackTab = window.open("about:blank", "_blank");
+        if (fallbackTab) {
+          fallbackTab.location.href = finalUrl;
+        } else {
+          setErrorToast("Popup blocked! Please allow popups to view this file.");
+        }
       }
     } catch (err) {
       console.error("Error opening file in new tab:", err);
       setErrorToast("Unable to open file. Please try again.");
-      if (newTab) newTab.close();
     } finally {
       setOpeningFileId(null);
     }
