@@ -323,9 +323,10 @@ export default function SubjectNotesScreen({ onNavigate }: SubjectNotesScreenPro
 const handleOpenFileInNewTab = async (file: SubjectFile) => {
     setOpeningFileId(file.id);
 
-   const fileUrl = (file.storagePath && !file.storagePath.startsWith("local_"))
-  ? await getNoteFileUrl(file.storagePath)
-  : (file.contentUrl || "");
+    try {
+      const fileUrl = (file.storagePath && !file.storagePath.startsWith("local_"))
+        ? await getNoteFileUrl(file.storagePath)
+        : (file.contentUrl || "");
 
       if (!fileUrl) {
         console.error("File URL missing");
@@ -336,8 +337,6 @@ const handleOpenFileInNewTab = async (file: SubjectFile) => {
 
       let finalUrl = fileUrl;
 
-      // Only convert data: URLs to blobs (needed for correct MIME rendering).
-      // Real Supabase URLs are opened directly — no extra fetch, no CORS risk.
       if (fileUrl.startsWith("data:")) {
         const mimeMap: Record<string, string> = {
           pdf: "application/pdf",
