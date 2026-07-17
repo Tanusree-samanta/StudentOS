@@ -419,8 +419,7 @@ export default function AttendanceScreen({
   const [targetPercentage, setTargetPercentage] = useState(75);
 
   const [showAddRoutineModal, setShowAddRoutineModal] = useState<boolean>(false);
-  const [newRoutineDay, setNewRoutineDay] = useState<"Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday">("Monday");
-  const [newRoutineSubjectId, setNewRoutineSubjectId] = useState<string>("");
+const [newRoutineDay, setNewRoutineDay] = useState<"Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday">("Monday");  const [newRoutineSubjectId, setNewRoutineSubjectId] = useState<string>("");
   const [newRoutineTime, setNewRoutineTime] = useState<string>("09:00 AM - 10:00 AM");
   const [newRoutineRoom, setNewRoutineRoom] = useState<string>("");
 
@@ -1489,8 +1488,8 @@ export default function AttendanceScreen({
                     }
 
                     return (
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                        {(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] as const).map((day) => {
+                      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+                        {(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday","Saturday", "Sunday"] as const).map((day) => {
                           const daySlots = timetable.filter((item) => item.day === day);
 
                           return (
@@ -2013,6 +2012,8 @@ export default function AttendanceScreen({
                     <option value="Wednesday">Wednesday</option>
                     <option value="Thursday">Thursday</option>
                     <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
                   </select>
                 </div>
 
