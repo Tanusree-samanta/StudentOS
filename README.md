@@ -1,5 +1,6 @@
 # StudentOS AI 
 
+
 StudentOS AI is a highly-polished, all-in-one student workspace featuring attendance tracking, a smart note library with AI capabilities, a CGPA calculator, dynamic flashcards, and an AI Study Assistant.
 
 
